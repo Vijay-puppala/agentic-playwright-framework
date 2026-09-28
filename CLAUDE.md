@@ -54,7 +54,7 @@ The rules above are the target. Until the repo catches up, follow the rules but 
 - **Package manager:** npm (`package-lock.json`), not pnpm.
 - **Page objects:** `tests/pages/`, not `tests/pom/`.
 - **Folders:** `tests/api/` and `tests/data/` don't exist yet. Test data lives in `tests/utils/test-data.ts`.
-- **Faker:** `@faker-js/faker` isn't installed. Adding it is a dependency change and needs its own PR (§9).
+- **Faker:** `@faker-js/faker` v10 is installed. It ships only as an ES module, and this CommonJS project can load it only on Node 20.19+ or 22.12+, so CI must use at least Node 20.19.
 - **Node:** the local machine runs Node 26, not 20.x. CI pins 20.
 - **Tags:** only `@smoke` and `@critical` are in use.
 
