@@ -18,6 +18,7 @@ The repository contains tests only. The application under test is the hosted Ora
 - [Continuous integration](#continuous-integration)
 - [Spec-driven development with Spec Kit](#spec-driven-development-with-spec-kit)
 - [Agent workflow (Claude Code)](#agent-workflow-claude-code)
+- [Project memory: AGENTS.md and the handoff files](#project-memory-agentsmd-and-the-handoff-files)
 - [Conventions](#conventions)
 - [Troubleshooting](#troubleshooting)
 
@@ -99,7 +100,11 @@ tests/fixtures/pages.fixture.ts  wiring: page objects, login session, generated 
 │   ├── fixtures/                      pages.fixture.ts
 │   ├── pages/                         page objects
 │   └── utils/                         env, test-data, helpers
+├── AGENTS.md                          working loop for any coding agent (read → work → update)
 ├── CLAUDE.md                          team rules and repo notes (read this before contributing)
+├── PROJECT_CONTEXT.md                 current project state
+├── TODO.md                            next steps and known problems
+├── DECISIONS.md                       numbered decisions (D1…) and their reasons
 ├── playwright.config.ts
 └── tsconfig.json
 ```
@@ -277,8 +282,9 @@ flowchart TD
     E -- "test bug<br/>(once)" --> I
     E -- pass --> C{ci-impact: yes<br/>in plan.md?}
     C -- yes --> CI[ci-cd<br/>edits workflows, writes ci.md]
-    C -- no --> S([Summary: stages, files changed, results, report links])
-    CI --> S
+    C -- no --> H[orchestrator<br/>updates PROJECT_CONTEXT.md,<br/>TODO.md, DECISIONS.md]
+    CI --> H
+    H --> S([Summary: stages, files changed, results, report links, handoff updates])
 ```
 
 **Gates and loops, in order:**
@@ -294,6 +300,7 @@ flowchart TD
 4. **Test-bug loop (one retry).** If the e2e-runner reports a real test bug, the implementer gets one chance to fix only that, and the tests run again. A second failure stops the pipeline.
 5. **Site-down stop.** If the demo is unreachable, the pipeline stops and reports it as environmental. It never loops against a dead site.
 6. **CI only when needed.** `ci-cd` runs only when `plan.md` says `ci-impact: yes`.
+7. **Project memory updated.** Whenever the pipeline got as far as the implementer (including an early stop), the orchestrator updates `PROJECT_CONTEXT.md`, adds new problems and blockers to `TODO.md`, and checks that the plan's decisions were recorded in `DECISIONS.md`. See [Project memory](#project-memory-agentsmd-and-the-handoff-files).
 
 The pipeline **never commits or pushes**. You do that afterwards (CLAUDE.md §8: Conventional Commits, no co-author trailers).
 
@@ -304,22 +311,22 @@ The pipeline **never commits or pushes**. You do that afterwards (CLAUDE.md §8:
 | | |
 |---|---|
 | **Model / tools** | Opus. Read, Grep, Glob, Bash (read-only commands only), Write (only `plan.md`) |
-| **Reads** | `CLAUDE.md`, the code the task touches, existing fixtures (`tests/fixtures/pages.fixture.ts`), page objects (`tests/pages/`), and utilities (`tests/utils/`) |
+| **Reads** | `CLAUDE.md`, `PROJECT_CONTEXT.md`, `DECISIONS.md`, `TODO.md`, recent `git log`, the code the task touches, existing fixtures (`tests/fixtures/pages.fixture.ts`), page objects (`tests/pages/`), API helpers (`tests/api/`), faker builders (`tests/data/`) and utilities (`tests/utils/`) |
 | **Writes** | `.work/<slug>/plan.md` |
 | **Must** | Reuse existing fixtures and page objects before proposing new ones. Plan against the repo as it actually is (see CLAUDE.md §10). Put each flag on its own line: `config-change: yes/no`, `deps-change: yes/no`, `ci-impact: yes/no`. |
 | **Never** | Edits source, config or dependencies. Plans a dependency bump into the same change. |
 | **On revision** | If `review.md` exists, it addresses every numbered finding and says how. |
 
-`plan.md` sections: **Goal**, **Changes** (file → what and why, naming the helpers reused), **Tests** (spec, title, tags, assertions), **Impacted specs to run**, and **Risks / open questions**.
+`plan.md` sections: **Goal**, **Changes** (file → what and why, naming the helpers reused), **Tests** (spec, title, tags, assertions), **Impacted specs to run**, **Decisions** (new or superseded `D<n>` entries, with reasons), **TODO updates**, and **Risks / open questions**. A plan that goes against a recorded decision must propose a new one here.
 
 #### 2. `reviewer`: checks the plan before any code exists
 
 | | |
 |---|---|
 | **Model / tools** | Opus. Read, Grep, Glob, Write (only `review.md`). **No Bash, no Edit.** |
-| **Reads** | `CLAUDE.md`, `plan.md`, and the files the plan names |
+| **Reads** | `CLAUDE.md`, `DECISIONS.md`, `TODO.md`, `PROJECT_CONTEXT.md`, `plan.md`, and the files the plan names |
 | **Writes** | `.work/<slug>/review.md`, with `verdict: APPROVED` or `verdict: CHANGES_REQUESTED`, followed by numbered findings, each tagged `[blocking]` or `[minor]` |
-| **Checks** | **Reuse** of existing code. The **rules**: locators §3, waits §4, data §5, tags §6. **Accuracy of the flags**; a config change needs a reason. **Correctness**, including fixture side effects: requesting `loginPage` navigates first. **Completeness**: the impacted specs are listed. |
+| **Checks** | **Reuse** of existing code. The **rules**: locators §3, waits §4, data §5, tags §6. **Accuracy of the flags**; a config change needs a reason. **Correctness**, including fixture side effects: requesting `loginPage` navigates first. **Completeness**: the impacted specs are listed. **Decisions**: contradicting a `DECISIONS.md` entry without proposing a new one is blocking. **Test data**: anything created on the demo is deleted in fixture teardown. |
 | **Principle** | `CHANGES_REQUESTED` only for blocking findings; minor ones can go through with `APPROVED`. It doesn't invent issues, and an empty findings list is fine. |
 | **Standalone mode** | Given file paths or a diff, it reviews that code for rule violations and correctness bugs. |
 
@@ -328,8 +335,8 @@ The pipeline **never commits or pushes**. You do that afterwards (CLAUDE.md §8:
 | | |
 |---|---|
 | **Model / tools** | Sonnet. Read, Edit, Write, Grep, Glob, Bash |
-| **Reads** | `CLAUDE.md`, `plan.md`, `review.md` (proceeds only if `APPROVED`), and `run.md` in a fix round |
-| **Writes** | Code, plus `.work/<slug>/impl.md`: files changed, verification results (typecheck, each spec), and any deviations from the plan |
+| **Reads** | `CLAUDE.md`, the three handoff files, `plan.md`, `review.md` (proceeds only if `APPROVED`), and `run.md` in a fix round |
+| **Writes** | Code, plus `.work/<slug>/impl.md`: files changed, verification results (typecheck, each spec), and any deviations from the plan. Also appends the plan's decisions to `DECISIONS.md` and ticks off or adds items in `TODO.md` (`PROJECT_CONTEXT.md` is the orchestrator's, unless the implementer is called directly). |
 | **Must** | Match the existing code: specs import from the fixtures, page objects extend `BasePage`, routes come from `ROUTES`. Run `npm run typecheck` and every impacted spec after editing. Use role, label, placeholder or text locators first; a CSS class only with a `// why` comment. |
 | **Never** | Uses `waitForTimeout` or XPath. Edits `playwright.config.ts` unless the plan says `config-change: yes`. Adds or bumps dependencies. Deletes a spec. Commits. |
 | **Site-down awareness** | Reports `ERR_TIMED_OUT` / `ERR_CONNECTION_CLOSED` as environmental, and doesn't "fix" them with longer timeouts. |
@@ -339,9 +346,9 @@ The pipeline **never commits or pushes**. You do that afterwards (CLAUDE.md §8:
 | | |
 |---|---|
 | **Model / tools** | Sonnet. Bash, Read, Grep, Glob, Write (only `run.md`). **Never edits code.** |
-| **Reads** | "Impacted specs to run" in `plan.md` (pipeline mode), or whatever scope you ask for |
-| **Writes** | `.work/<slug>/run.md`: site status, pass/fail/flaky counts, a per-test table with the triage of each failure, and the report paths |
-| **Steps** | 1. `curl` the login page; if it isn't HTTP 200, stop with "site down". 2. Pick the scope. 3. Clear `allure-results/`. 4. Run `npx playwright test <scope> --project=chromium` (**never** with `--reporter`). 5. `npm run allure:generate`. 6. Triage every failure from `test-results/*/error-context.md`. |
+| **Reads** | `TODO.md` known problems and `PROJECT_CONTEXT.md` verified results (to tell known issues from new ones), then "Impacted specs to run" in `plan.md` (pipeline mode), or whatever scope you ask for |
+| **Writes** | `.work/<slug>/run.md`: site status, pass/fail/flaky counts, a per-test table with the triage of each failure, **New problems** (not already in `TODO.md`, including any `cleanup-warning`), and the report paths. It doesn't edit the handoff files; the orchestrator records its new problems. |
+| **Steps** | 1. `curl` the login page; if it isn't HTTP 200, stop with "site down". 2. Pick the scope. 3. Clear `allure-results/`. 4. Run `npx playwright test <scope> --project=chromium` (**never** with `--reporter`). 5. `npm run allure:generate`. 6. Triage every failure from `test-results/*/error-context.md`. 7. Look for `cleanup-warning` annotations in `test-results/results.json`. |
 | **Triage** | **site-down**: network errors in `page.goto`, or the Login button never appears. **flaky**: passed on retry. **test bug**: anything else, with the error and the failing line quoted. |
 
 #### 5. `ci-cd`: maintains the GitHub Actions workflow
@@ -349,8 +356,8 @@ The pipeline **never commits or pushes**. You do that afterwards (CLAUDE.md §8:
 | | |
 |---|---|
 | **Model / tools** | Sonnet. Read, Edit, Write, Grep, Glob, Bash |
-| **Reads** | `CLAUDE.md` (§6, §7, §10), `playwright.config.ts`, `package.json`, and in pipeline mode `plan.md` and `run.md` |
-| **Writes** | `.github/workflows/*.yml`, plus `.work/<slug>/ci.md` (jobs, triggers, secrets, validation result) |
+| **Reads** | `CLAUDE.md` (§6, §7, §10), `DECISIONS.md` (D11, D12), `TODO.md`, `playwright.config.ts`, `package.json`, and in pipeline mode `plan.md` and `run.md` |
+| **Writes** | `.github/workflows/*.yml`, plus `.work/<slug>/ci.md` (jobs, triggers, secrets, validation result). Records CI decisions in `DECISIONS.md` and updates CI items in `TODO.md`. |
 | **Rules** | `ubuntu-latest`, headless, Node 20, `npm ci`, `npx playwright install --with-deps chromium`. **Every trigger runs the full suite; no tag filters.** `CI: true`. Reports uploaded with `if: !cancelled()`. Actions pinned to major versions. **No `ADMIN_*` secrets** (see [Continuous integration](#continuous-integration)). |
 | **Never** | Edits tests or `playwright.config.ts` (config needs go back through the planner). Adds dependencies. Commits or pushes. |
 | **Validates** | Parses every workflow with `yaml`, and runs `actionlint` if it's installed. |
@@ -397,6 +404,30 @@ Both lead to reviewed, tested changes. Choose based on the size of the change:
 | **A single agent** | A one-off job | Run smoke, review a file, update CI |
 
 They can also be combined: after `/speckit-tasks`, you can point the `implementer` at `tasks.md` as its approved plan, and have `e2e-runner` validate the result. (Feature 001 itself was implemented with `/speckit-implement` in the main session.)
+
+---
+
+## Project memory: AGENTS.md and the handoff files
+
+Agents start every session with no memory, so the project's state is kept in four files in the repo root:
+
+| File | Holds | Updated by |
+|---|---|---|
+| `AGENTS.md` | The working loop for any coding agent (Claude Code, Codex, Cursor…): what to read first, what to keep current, what "done" means | Rarely, when the process changes |
+| `PROJECT_CONTEXT.md` | The current state: branches and PR, stack, layout, how the fixtures and tests work, CI, verified results | Whoever finishes a substantial task. In `/pipeline`, the orchestrator. |
+| `TODO.md` | Next steps, known problems and gaps, possible features | The implementer and `ci-cd` (items they close or add); the orchestrator (new problems from `run.md`, blockers) |
+| `DECISIONS.md` | Numbered decisions `D1`, `D2`, …, each with its reason and what would change it. Superseded entries are marked, not deleted. | The implementer and `ci-cd` (from the plan's **Decisions** section); the orchestrator checks nothing was missed |
+
+**The loop** (`AGENTS.md`, CLAUDE.md §13):
+1. **Before:** read `PROJECT_CONTEXT.md`, `TODO.md`, `DECISIONS.md`, the relevant source, and `git log --oneline -15`.
+2. **During:** keep `TODO.md` current. Record decisions. Don't reverse a recorded decision without adding a new one. Run the typecheck and the impacted specs.
+3. **After, at the end of every session** (automatically, even if nobody asks): update all three files. Remove obsolete state, don't copy the conversation in, don't call unfinished work done, and skip the update if nothing meaningful changed. Then check them against `git status` and `git log`, and leave the repo reproducible (clean typecheck, no leftover demo data, only intended changes in `git status`).
+
+The planner, reviewer, implementer, e2e-runner and ci-cd agents all read these files. Which of them writes to which file is shown in [The agents in detail](#the-agents-in-detail).
+
+**Starting a new session:** paste this as the first prompt:
+
+> Read AGENTS.md, PROJECT_CONTEXT.md, TODO.md, DECISIONS.md, README.md, and the recent git history. Understand the existing project before making changes. Then continue from the current state.
 
 ---
 

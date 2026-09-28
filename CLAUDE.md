@@ -85,3 +85,16 @@ Five subagents live in `.claude/agents/`: `planner`, `reviewer`, `implementer`, 
 - `/pipeline <task>` runs them in order, pausing for your approval after the review.
 - `/pipeline <task> --only <stage>` runs one stage; `--from <stage>` resumes from one.
 - Any agent can also be called directly, e.g. `@agent-e2e-runner run smoke`.
+
+## 13. Handoff files (read first, update last)
+`AGENTS.md` sets out the working loop. `PROJECT_CONTEXT.md` is the current state, `TODO.md` is the remaining work and known problems, and `DECISIONS.md` holds the numbered decisions (D1…).
+- **At the start of any task:** read all three, plus `git log --oneline -15`.
+- **Before changing established behaviour:** check `DECISIONS.md`, and add a new decision rather than silently reversing an old one.
+- **At the end of every session**, automatically and whether or not the user asks, follow "Persistent context maintenance" in `AGENTS.md`:
+  - review the session's work and update all three files;
+  - remove obsolete state and keep them short;
+  - never copy the transcript;
+  - never claim unfinished, untested or unpushed work is done;
+  - leave them untouched if nothing meaningful changed;
+  - check them against `git status` and `git log` before stopping.
+- **In `/pipeline`:** the implementer and `ci-cd` agents update `TODO.md` and `DECISIONS.md`, and the orchestrator updates `PROJECT_CONTEXT.md`.
