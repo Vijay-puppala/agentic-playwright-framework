@@ -5,6 +5,7 @@ export const VALID_USER = ADMIN_CREDENTIALS;
 export const MESSAGES = {
   invalidCredentials: 'Invalid credentials',
   required: 'Required',
+  saved: 'Successfully Saved',
 } as const;
 
 /** Credential combinations that must be rejected by the server. */

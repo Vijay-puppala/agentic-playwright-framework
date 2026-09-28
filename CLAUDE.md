@@ -53,10 +53,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 The rules above are the target. Until the repo catches up, follow the rules but use the repo's real tools and paths:
 - **Package manager:** npm (`package-lock.json`), not pnpm.
 - **Page objects:** `tests/pages/`, not `tests/pom/`.
-- **Folders:** `tests/api/` and `tests/data/` don't exist yet. Test data lives in `tests/utils/test-data.ts`.
-- **Faker:** `@faker-js/faker` isn't installed. Adding it is a dependency change and needs its own PR (§9).
+- **Folders:** `tests/api/` holds REST helpers for test setup and cleanup (`orangehrm.api.ts`, called with the logged-in `page.request`). `tests/data/` holds faker builders (`user.factory.ts`). Fixed strings and data-driven cases stay in `tests/utils/test-data.ts`.
+- **Faker:** `@faker-js/faker` v10 is installed. It ships only as an ES module, and this CommonJS project can load it only on Node 20.19+ or 22.12+, so CI must use at least Node 20.19.
 - **Node:** the local machine runs Node 26, not 20.x. CI pins 20.
-- **Tags:** only `@smoke` and `@critical` are in use.
+- **Tags:** `@smoke`, `@critical` and `@regression` are in use (`@flaky` and `@wip` aren't yet).
+- **Test data cleanup:** tests that create records on the shared demo must delete them in fixture teardown. See `testEmployee` and `newUser` in `tests/fixtures/pages.fixture.ts`: failures become `cleanup-warning` annotations and are never thrown.
 
 ## 11. Commands & demo-site notes
 The target is the public OrangeHRM demo (https://opensource-demo.orangehrmlive.com). This repo has no application code, only tests.

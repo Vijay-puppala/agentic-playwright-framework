@@ -12,10 +12,10 @@ Read `CLAUDE.md` (§6 tagging, §7 reporting, §10 repo state), `playwright.conf
 
 ## Requirements
 - **Tooling:** npm (`npm ci`, with `cache: npm` in `actions/setup-node`), Node 20 per CLAUDE.md §1, and `npx playwright install --with-deps chromium`.
-- **Scope by trigger:**
-  - `pull_request` runs `npx playwright test --grep @smoke` (§6).
-  - A push to `main` and `workflow_dispatch` run the full suite.
-- **Environment:** `CI: true`. The config uses it for 2 retries, 2 workers, `forbidOnly` and the `github` reporter. Put credentials in `env:` from `secrets.ADMIN_USERNAME` / `secrets.ADMIN_PASSWORD`. `tests/utils/env.ts` falls back to the public demo values, so the job still works if they aren't set.
+- **Scope:** every trigger (`pull_request`, a push to `main`, `workflow_dispatch`) runs the **full suite**, `npx playwright test --project=chromium`, whatever the tests' tags. Never add `--grep` or tag filters to CI (the user's decision, 2026-09-28). The full suite includes the `@smoke` tests, so CLAUDE.md §6 is still met.
+- **Headless:** runs on `ubuntu-latest`, headless. The config sets `headless: true`; never pass `--headed`.
+- **Environment:** `CI: true`. The config uses it for 2 retries, `forbidOnly` and the `github` reporter. Workers stay at 1 everywhere.
+- **Credentials:** don't read `secrets.ADMIN_*` in the workflow. An unset secret arrives as an empty string, and `tests/utils/env.ts` falls back to the demo defaults only with `??`, so an empty string would break login. If secrets are ever needed, first ask for `env.ts` to switch to `||` (a test-code change, which goes back through the planner).
 - **Reports (§7):** don't pass `--reporter`, because the config already writes HTML, JSON and Allure results. After the tests, run `npm run allure:generate`. Upload `playwright-report/`, `test-results/` (traces and screenshots) and `allure-report/` with `actions/upload-artifact`, and use `if: ${{ !cancelled() }}` so failed runs still publish them.
 - **Job timeout:** about 60 min. The demo site is slow.
 - Pin actions to major versions (`actions/checkout@v4`, `actions/setup-node@v4`, `actions/upload-artifact@v4`).
@@ -23,7 +23,7 @@ Read `CLAUDE.md` (§6 tagging, §7 reporting, §10 repo state), `playwright.conf
 ## Boundaries
 - Don't edit tests or `playwright.config.ts`. If CI needs a config change, report it so it goes back through the planner.
 - Don't add dependencies.
-- This machine's folder is not a git repo yet. You can write and validate workflows, but you can't run them on GitHub. Say so in your report.
+- Don't commit or push. The workflow only runs on GitHub after the user pushes. Say that in your report, and point to the Actions tab of `origin`.
 
 ## Validate
 Parse every workflow you touch:

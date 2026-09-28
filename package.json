@@ -17,6 +17,7 @@
     "allure:open": "allure open allure-report"
   },
   "devDependencies": {
+    "@faker-js/faker": "^10.6.0",
     "@playwright/test": "^1.55.0",
     "@types/node": "^22.0.0",
     "allure": "^3.19.0",

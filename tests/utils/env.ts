@@ -12,4 +12,9 @@ export const ROUTES = {
   login: '/web/index.php/auth/login',
   dashboard: '/web/index.php/dashboard/index',
   requestPasswordReset: '/web/index.php/auth/requestPasswordResetCode',
+  addUser: '/web/index.php/admin/saveSystemUser',
+  systemUsers: '/web/index.php/admin/viewSystemUsers',
 } as const;
+
+// REST API used for test setup and cleanup; calls share the logged-in page's session cookie.
+export const API_BASE = `${BASE_URL}/web/index.php/api/v2`;

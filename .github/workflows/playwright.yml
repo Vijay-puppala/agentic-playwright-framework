@@ -1,0 +1,61 @@
+name: Playwright E2E
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: playwright-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    name: All tests
+    runs-on: ubuntu-latest
+    # The public OrangeHRM demo is slow; tests take 20-60s each.
+    timeout-minutes: 60
+    env:
+      # Turns on the config's CI settings: forbidOnly, 2 retries, GitHub reporter.
+      CI: true
+      # No ADMIN_* secrets here: an unset secret is an empty string, which would
+      # override the public demo defaults in tests/utils/env.ts.
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # faker v10 is ESM-only and needs Node 20.19+ to load from CommonJS.
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      # Every trigger runs every test, whatever its tags (no --grep).
+      # Headless: the config sets headless: true and --headed is never passed.
+      # Don't pass --reporter: it replaces the HTML, JSON and Allure reporters.
+      - name: Run all tests
+        run: npx playwright test --project=chromium
+
+      - name: Generate Allure report
+        if: ${{ !cancelled() }}
+        run: npm run allure:generate
+
+      - name: Upload reports
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-reports-${{ github.run_id }}
+          path: |
+            playwright-report/
+            allure-report/
+            test-results/
+          retention-days: 14

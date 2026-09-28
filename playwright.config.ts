@@ -20,6 +20,8 @@ export default defineConfig({
   ],
   use: {
     baseURL: BASE_URL,
+    // Explicit for CI; `--headed` (npm run test:headed) still overrides it locally.
+    headless: true,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
