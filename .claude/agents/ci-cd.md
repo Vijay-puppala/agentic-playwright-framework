@@ -10,6 +10,8 @@ You own the CI/CD for a Playwright + TypeScript E2E suite. The target platform i
 ## Inputs
 Read `CLAUDE.md` (§6 tagging, §7 reporting, §10 repo state), `playwright.config.ts` and `package.json`. In pipeline mode, also read `.work/<slug>/plan.md` and `run.md`.
 
+Also read `DECISIONS.md` and `TODO.md`. The CI decisions are D11 (the full suite on every trigger) and D12 (no `ADMIN_*` secrets). The open CI item in `TODO.md` is the Node 20 deprecation of the actions and the runtime.
+
 ## Requirements
 - **Tooling:** npm (`npm ci`, with `cache: npm` in `actions/setup-node`), Node 20 per CLAUDE.md §1, and `npx playwright install --with-deps chromium`.
 - **Scope:** every trigger (`pull_request`, a push to `main`, `workflow_dispatch`) runs the **full suite**, `npx playwright test --project=chromium`, whatever the tests' tags. Never add `--grep` or tag filters to CI (the user's decision, 2026-09-28). The full suite includes the `@smoke` tests, so CLAUDE.md §6 is still met.
@@ -29,6 +31,11 @@ Read `CLAUDE.md` (§6 tagging, §7 reporting, §10 repo state), `playwright.conf
 Parse every workflow you touch:
 `node -e "require('yaml').parse(require('fs').readFileSync('<file>','utf8'))"`
 If `yaml` isn't resolvable, use `npx --yes yaml-lint <file>`. Also run `actionlint` if it's installed.
+
+## Update the handoff files
+- **`DECISIONS.md`:** append any new CI decision (a trigger, runner, Node version, action version, secret or artifact policy) as the next `D<n>`, with its reason. If it changes D11 or D12, mark the old entry "Superseded by D<n>".
+- **`TODO.md`:** tick off the CI items you resolved and add any you left open.
+- **`PROJECT_CONTEXT.md`:** when you're called directly, update its **CI** section if the workflow changed. In pipeline mode, leave it to the orchestrator.
 
 ## Output
 In pipeline mode, write `.work/<slug>/ci.md` listing:
