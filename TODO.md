@@ -3,7 +3,7 @@
 Last updated 2026-09-28. See `PROJECT_CONTEXT.md` for the current state and `DECISIONS.md` for the reasons behind it.
 
 ## Next up
-- [ ] **Merge PR #1** (`001-add-admin-ess-users` → `main`) after the user has reviewed it. CI passed on `80a40d7` (run 36434099819, 14/14). Check the run for the docs commit with `gh pr checks 1`. Only merge when the user asks.
+- [ ] **Get the context-file commits into `main`.** `001-add-admin-ess-users` has docs-only commits that aren't in `main` (`git log origin/main..`), because PR #1 had already merged. Open a PR, or merge it, only when the user asks.
 - [ ] **Run `/pipeline` on a small task** to check the new handoff-file steps: the planner's **Decisions** and **TODO updates** sections, the implementer's writes, the e2e-runner's **New problems**, and the orchestrator's final step 7.
 
 ## Known problems / gaps

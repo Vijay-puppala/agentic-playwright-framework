@@ -11,20 +11,14 @@ A Playwright + TypeScript end-to-end test suite for the **public OrangeHRM demo*
 ## Git / PR state
 | Branch | Head | Notes |
 |---|---|---|
-| `main` | `5a9bd6d` | Initial suite: login and logout specs, page objects, config. Pushed. |
-| `001-add-admin-ess-users` | see `git log` | 7 commits on top of `main`. Pushed. |
+| `main` | `2c7ef51` | Merge of PR #1. It contains the initial suite (`5a9bd6d`) plus all of feature 001, CI and the README, up to `80a40d7`. |
+| `001-add-admin-ess-users` | see `git log` | GitHub deleted this branch when PR #1 merged, and pushing the docs commits below recreated it. It is **ahead of `main` and not in any PR yet.** |
 
-Feature branch commits, oldest first:
-1. `d278b12` build(deps): add @faker-js/faker
-2. `660737f` test(admin): add Admin and ESS user creation e2e
-3. `1a2244f` ci: add Playwright workflow on ubuntu-latest, headless
-4. `08036f3` ci: run the full suite on every trigger regardless of tags
-5. `2ff33d1` fix(agents): correct ci-cd agent guidance on secrets, workers and git state
-6. `80a40d7` docs: add README
-7. docs: add AGENTS.md and the persistent context files. This adds AGENTS.md, PROJECT_CONTEXT.md, TODO.md, DECISIONS.md and CLAUDE.md §13, adds handoff-file steps to all 5 agents and `/pipeline`, and adds the README's "Project memory" section. Run `git log -1` for the hash.
+**PR #1** (`feat(admin): Admin and ESS user creation e2e + CI workflow`) was **merged** on 2026-09-28 at 14:14 UTC. Its CI run, 36434099819, **passed**: 14/14 tests in 1.3 min on Node 20.20.2.
 
-**PR #1** (feature branch → `main`) is **open and not merged**: https://github.com/Vijay-puppala/agentic-playwright-framework/pull/1
-- CI run 36434099819 **passed** on commit 6 (`80a40d7`): 14/14 tests in 1.3 min, 1m57s for the whole job, on Node 20.20.2. Commit 7 changes only docs and agent instructions, and starts a new CI run. Check it with `gh pr checks 1`.
+Commits on the feature branch that aren't in `main`:
+- `24343e1` docs: add AGENTS.md and the persistent context files. This adds AGENTS.md, PROJECT_CONTEXT.md, TODO.md, DECISIONS.md and CLAUDE.md §13, adds handoff-file steps to all 5 agents and `/pipeline`, and adds the README's "Project memory" section.
+- A follow-up `docs:` commit that corrects this section after finding out PR #1 had merged. Run `git log origin/main..` to see it.
 
 ## Stack (actual)
 - **Playwright:** `@playwright/test` `^1.55` (1.63 installed), Chromium is the only project.
