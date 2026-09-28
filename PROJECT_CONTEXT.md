@@ -12,13 +12,16 @@ A Playwright + TypeScript end-to-end test suite for the **public OrangeHRM demo*
 | Branch | Head | Notes |
 |---|---|---|
 | `main` | `2c7ef51` | Merge of PR #1. It contains the initial suite (`5a9bd6d`) plus all of feature 001, CI and the README, up to `80a40d7`. |
-| `001-add-admin-ess-users` | see `git log` | GitHub deleted this branch when PR #1 merged, and pushing the docs commits below recreated it. It is **ahead of `main` and not in any PR yet.** |
+| `001-add-admin-ess-users` | see `git log` | GitHub deleted this branch when PR #1 merged, and pushing the docs commits below recreated it. It is ahead of `main` and is the head of **PR #2**. |
 
 **PR #1** (`feat(admin): Admin and ESS user creation e2e + CI workflow`) was **merged** on 2026-09-28 at 14:14 UTC. Its CI run, 36434099819, **passed**: 14/14 tests in 1.3 min on Node 20.20.2.
 
-Commits on the feature branch that aren't in `main`:
+**PR #2** (`docs: add AGENTS.md and persistent context files for agent handoff`) is **open and not merged**: https://github.com/Vijay-puppala/agentic-playwright-framework/pull/2. It changes only docs and agent instructions, and CI runs the full suite on it; check with `gh pr checks 2`.
+
+Commits in PR #2 (`git log origin/main..`):
 - `24343e1` docs: add AGENTS.md and the persistent context files. This adds AGENTS.md, PROJECT_CONTEXT.md, TODO.md, DECISIONS.md and CLAUDE.md §13, adds handoff-file steps to all 5 agents and `/pipeline`, and adds the README's "Project memory" section.
-- A follow-up `docs:` commit that corrects this section after finding out PR #1 had merged. Run `git log origin/main..` to see it.
+- `e2eddbd` docs: record PR #1 as merged, and the branch state, in the context files.
+- docs: record PR #2 in the context files (this state).
 
 ## Stack (actual)
 - **Playwright:** `@playwright/test` `^1.55` (1.63 installed), Chromium is the only project.

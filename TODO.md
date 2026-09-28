@@ -3,7 +3,7 @@
 Last updated 2026-09-28. See `PROJECT_CONTEXT.md` for the current state and `DECISIONS.md` for the reasons behind it.
 
 ## Next up
-- [ ] **Get the context-file commits into `main`.** `001-add-admin-ess-users` has docs-only commits that aren't in `main` (`git log origin/main..`), because PR #1 had already merged. Open a PR, or merge it, only when the user asks.
+- [ ] **Merge PR #2** (https://github.com/Vijay-puppala/agentic-playwright-framework/pull/2): the docs-only context files and agent instructions. Check CI with `gh pr checks 2`, and merge only when the user asks. After it merges, GitHub may delete `001-add-admin-ess-users` again; start future work on a new branch.
 - [ ] **Run `/pipeline` on a small task** to check the new handoff-file steps: the planner's **Decisions** and **TODO updates** sections, the implementer's writes, the e2e-runner's **New problems**, and the orchestrator's final step 7.
 
 ## Known problems / gaps
